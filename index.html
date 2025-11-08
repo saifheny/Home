@@ -757,7 +757,18 @@
             cursor: pointer; 
             display: block;
             transition: all 0.3s;
-        } 
+        }
+        .feature-item-link.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .feature-item-link.disabled:hover {
+            transform: none;
+        }
+        .feature-item-link.disabled:hover .icon-bg {
+            transform: none;
+            box-shadow: var(--card-shadow);
+        }
         .feature-item-link:hover {
             transform: translateY(-5px);
         }
@@ -1432,7 +1443,7 @@
         const stageMap = { prep_1: 'أولى إعدادي', prep_2: 'ثانية إعدادي', prep_3: 'ثالثة إعدادي', sec_1: 'أولى ثانوي', sec_2_sci: 'ثانية ثانوي - علمي', sec_2_lit: 'ثانية ثانوي - أدبي', sec_3_sci_science: 'ثالثة ثانوي - علمي علوم', sec_3_sci_math: 'ثالثة ثانوي - علمي رياضة', sec_3_lit: 'ثالثة ثانوي - أدبي' };
 
         // --- Firebase Config ---
-        const firebaseConfig = { apiKey: "AIzaSyCsnZdFrg-KlWFc0z6OgmXgBp6lPKf14fU", authDomain: "saifsa-b51f1.firebaseapp.com", databaseURL: "https://saifsa-b51f1-default-rtdb.europe-west1.firebasedatabase.app", projectId: "saifsa-b51f1", storageBucket: "saifsa-b51f1.appspot.com", messagingSenderId: "41089917871", appId: "1:41089917871:web:fce49f6f23bd4f679b055a"};
+        const firebaseConfig = { apiKey: "AIzaSyCsnZdFrg-KlWFc0z6OgmXgBp6lPKf14fU", authDomain: "saifsa-b51f1.firebaseapp.com", databaseURL: "https://saifsa-b51f1-default-rtdb.europe-west1.firebasedatabase.app", projectId: "saifsa-b51f1" };
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         const studentsRef = database.ref('students');
@@ -1893,6 +1904,10 @@
                 <div class="feature-item" data-key="chat"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-comments"></i></div><p>الدردشة</p></a></div>
                 <div class="feature-item" data-key="kerio"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-laptop-file"></i></div><p>حل منصة كيريو</p></a></div>
                 <div class="feature-item" data-key="shorts"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-photo-film"></i></div><p>الشورتس</p></a></div>
+                <div class="separator"></div>
+                <div class="feature-item" data-key="education_platform"><a class="feature-item-link"><div class="icon-bg"><i class="fas fa-university"></i></div><p>المنصة التعليمية</p></a></div>
+                <div class="feature-item" data-key="quotes"><a class="feature-item-link"><div class="icon-bg"><i class="fas fa-quote-right"></i></div><p>اقتباسات</p></a></div>
+                <div class="feature-item" data-key="not_working"><a class="feature-item-link disabled" onclick="event.preventDefault(); customAlert('هذه الميزة غير متوفرة حاليًا.');"><div class="icon-bg"><i class="fas fa-ban"></i></div><p>لا تعمل حاليًا</p></a></div>
             `;
             const categoriesRef = database.ref('categories');
             categoriesRef.on('value', (snapshot) => {
@@ -1904,11 +1919,11 @@
 
                 featuresContainer.querySelectorAll('.feature-item-link').forEach(link => {
                     const key = link.parentElement.dataset.key;
-                    if(links[key]){
+                    if(links[key] && !['my_courses', 'not_working'].includes(key)){
                          if (key === 'exams_homework') {
                             link.href = 'javascript:void(0)';
                             link.onclick = () => { window.location.href = examsFeatureLink; };
-                        } else if (key !== 'my_courses') {
+                        } else {
                             link.href = links[key];
                         }
                     }
