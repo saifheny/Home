@@ -1,3 +1,4 @@
+html
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -64,7 +65,7 @@
         .page.active { 
             display: flex; 
         }
-        .dashboard-page, #course-content-page, #student-course-view-page, #video-player-page, #student-courses-hub-page, #teacher-requests-page, #teacher-students-page, #course-details-page { 
+        .dashboard-page, #course-content-page, #student-course-view-page, #video-player-page, #student-courses-hub-page, #teacher-requests-page, #teacher-students-page, #course-details-page, #all-teachers-page { 
             justify-content: flex-start; 
         }
 
@@ -420,6 +421,9 @@
             flex-direction: column; 
             gap: 15px; 
         }
+        #course-students-container {
+            margin-top: 50px;
+        }
         .course-card, .student-card, .request-card { 
             background-color: var(--surface-color); 
             border-radius: 15px; 
@@ -613,6 +617,9 @@
             color: var(--dark-text); 
             border-radius: 8px;
             transition: all 0.3s;
+        }
+        .content-item .actions .action-btn {
+             font-size: 1.5rem; color: var(--accent-color);
         }
         .content-item .actions button:hover {
             background-color: rgba(142, 45, 226, 0.1);
@@ -931,6 +938,7 @@
             flex-direction: column; 
             gap: 25px; 
             align-items: center; 
+            width: 100%;
         }
         .platform-card { 
             background-color: var(--surface-color); 
@@ -1190,12 +1198,8 @@
         }
 
         /* --- All Teachers Page --- */
-        #all-teachers-page, #teacher-students-page { 
-            justify-content: flex-start; 
-            padding: 20px; 
-            overflow-y: auto; 
-            height: auto; 
-            box-sizing: border-box; 
+        #all-teachers-page { 
+            padding: 70px 20px 20px 20px; 
         }
         .page-header { 
             width: 100%; 
@@ -1216,7 +1220,7 @@
         .teachers-grid { 
             display: grid; 
             grid-template-columns: repeat(3, 1fr); 
-            gap: 20px; 
+            gap: 15px; 
             width: 100%; 
             padding-bottom: 20px; 
         }
@@ -1230,16 +1234,7 @@
         }
 
         /* --- Responsive Design --- */
-        @media (max-width: 768px) {
-            .teachers-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        
         @media (max-width: 480px) {
-            .teachers-grid {
-                grid-template-columns: 1fr;
-            }
             .content-header h1, .page-header h1 {
                 font-size: 1.1rem;
             }
@@ -1335,7 +1330,7 @@
     </div>
     <div id="teacher-students-page" class="page">
         <header class="content-header"> <i class="fas fa-arrow-left back-icon" onclick="showPage('teacher-dashboard-page')"></i> <h1 id="students-course-title"></h1><div style="width: 35px;"></div></header>
-        <div id="course-students-container" style="width: 90%; max-width: 600px; margin-top: 20px;"></div>
+        <div id="course-students-container" style="width: 90%; max-width: 600px;"></div>
     </div>
     <div id="teacher-requests-page" class="page">
         <header class="content-header"> <i class="fas fa-arrow-left back-icon" onclick="showPage('teacher-dashboard-page')"></i> <h1 id="requests-course-title"></h1><div style="width: 35px;"></div></header>
@@ -1370,7 +1365,9 @@
             <section class="teachers-section"> <div class="section-header"> <h2>المعلمين</h2> <a id="view-all-teachers-btn" class="view-all-btn">الكل <i class="fas fa-arrow-left"></i></a> </div> <div id="teachers-list-container" class="teachers-list-container"></div> </section> 
             <section id="platforms-section">
                 <div class="section-header" style="width: 90%; max-width: 400px; margin: 0 auto 15px auto;"> <h2>المنصات التعليمية</h2> <button class="subscriptions-btn" onclick="showCoursesHub()">اشتراكاتك</button> </div>
-                <div id="platforms-container"></div>
+                <div id="platforms-container">
+                     <p id="no-search-results" style="display: none; text-align: center; width: 100%;"></p>
+                </div>
             </section>
         </main> 
     </div>
@@ -1406,7 +1403,7 @@
          <div id="video-player-container"></div>
     </div>
     <div id="all-teachers-page" class="page"> 
-        <header class="page-header"> <i class="fas fa-arrow-left back-icon" onclick="showPage('student-dashboard-page')"></i> <h1>كل المعلمين</h1> <div style="flex-basis: 35px;"></div> </header> 
+        <header class="content-header"> <i class="fas fa-arrow-left back-icon" onclick="showPage('student-dashboard-page')"></i> <h1>كل المعلمين</h1> <div style="flex-basis: 35px;"></div> </header> 
         <div id="all-teachers-grid" class="teachers-grid"></div> 
     </div>
 
@@ -1562,15 +1559,17 @@
                          ['videos', 'homeworks', 'exams'].forEach(type => {
                             if (weekData[type]) {
                                 Object.entries(weekData[type]).forEach(([itemId, item]) => {
-                                    let icon = 'fa-question-circle', itemDetails = '';
+                                    let icon = 'fa-question-circle', itemDetails = '', actionsHTML = '';
                                     if(type === 'videos') {
                                         icon = 'fa-video'; 
                                         itemDetails = item.duration;
+                                        contentHTML += `<div class="content-item"><div class="content-item-info" onclick="openContentItem('${type}', '${item.url || ''}', '${item.title}')"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span></div></div>`;
                                     } else {
                                         icon = (type === 'homeworks') ? 'fa-pencil-alt' : 'fa-file-alt';
                                         itemDetails = ` ${item.questions} سؤال - ${item.time} دقيقة`;
+                                        actionsHTML = `<div class="actions"><button class="action-btn" onclick="customAlert('هذه الخاصية قيد التطوير وستكون متاحة قريباً!')" title="بدء الاختبار/الواجب"><i class="fas fa-play-circle"></i></button></div>`;
+                                        contentHTML += `<div class="content-item"><div class="content-item-info"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span></div>${actionsHTML}</div>`;
                                     }
-                                    contentHTML += `<div class="content-item" onclick="openContentItem('${type}', '${item.url || ''}', '${item.title}')"><div class="content-item-info"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span></div></div>`;
                                 });
                             }
                          });
@@ -1803,27 +1802,53 @@
         document.getElementById('course-search-input').addEventListener('input', (e) => {
             const searchTerm = e.target.value.toLowerCase().trim();
             const platformCards = document.querySelectorAll('#platforms-container .platform-card');
+            let visibleCount = 0;
             platformCards.forEach(card => {
                 const title = card.querySelector('h4').textContent.toLowerCase();
                 const teacherName = card.querySelector('h5').textContent.toLowerCase();
                 if (title.includes(searchTerm) || teacherName.includes(searchTerm)) {
                     card.style.display = 'block';
+                    visibleCount++;
                 } else {
                     card.style.display = 'none';
                 }
             });
+            const noResultsMsg = document.getElementById('no-search-results');
+            if (visibleCount === 0 && searchTerm !== '') {
+                noResultsMsg.textContent = 'لا توجد نتائج مطابقة لبحثك.';
+                noResultsMsg.style.display = 'block';
+            } else {
+                noResultsMsg.style.display = 'none';
+            }
         });
 
         function loadTeachersForStudent() {
-            const listContainer = document.getElementById('teachers-list-container'); const gridContainer = document.getElementById('all-teachers-grid');
-            listContainer.innerHTML = ''; gridContainer.innerHTML = '';
+            const listContainer = document.getElementById('teachers-list-container'); 
+            const gridContainer = document.getElementById('all-teachers-grid');
+            listContainer.innerHTML = ''; 
+            gridContainer.innerHTML = '';
             teachersRef.once('value', snapshot => {
-                if (!snapshot.exists()) { const noTeachersMsg = '<p>لا يوجد معلمين حالياً</p>'; listContainer.innerHTML = noTeachersMsg; gridContainer.innerHTML = noTeachersMsg; return; }
+                if (!snapshot.exists()) { 
+                    const noTeachersMsg = '<p>لا يوجد معلمين حالياً</p>'; 
+                    listContainer.innerHTML = noTeachersMsg; 
+                    gridContainer.innerHTML = noTeachersMsg; 
+                    return; 
+                }
+                let teacherCount = 0;
+                let gridHTML = '';
                 snapshot.forEach(childSnapshot => {
-                    const teacher = childSnapshot.val(); const placeholderImg = 'https://via.placeholder.com/80/0984e3/FFFFFF?text=T';
+                    const teacher = childSnapshot.val(); 
+                    const placeholderImg = 'https://via.placeholder.com/80/0984e3/FFFFFF?text=T';
                     const teacherCardHTML = `<div class="teacher-card"><img src="${teacher.photo || placeholderImg}" alt="${teacher.name}" onerror="this.src='${placeholderImg}'"><p>${teacher.name}</p></div>`;
-                    listContainer.innerHTML += teacherCardHTML; gridContainer.innerHTML += teacherCardHTML;
+                    listContainer.innerHTML += teacherCardHTML; 
+                    
+                    gridHTML += teacherCardHTML;
+                    teacherCount++;
+                    if (teacherCount % 3 === 0) {
+                        gridHTML += '<div class="separator"></div>';
+                    }
                 });
+                gridContainer.innerHTML = gridHTML;
             });
         }
         function loadSlider() {
@@ -1872,9 +1897,13 @@
             const studentSnapshot = await studentsRef.child(studentId).once('value');
             const studentData = studentSnapshot.val();
             const enrolledCourses = studentData.enrolledCourses || [];
+            
+            document.getElementById('no-search-results').style.display = 'none';
 
             coursesRef.orderByChild('stage').equalTo(studentStage).on('value', snapshot => {
-                container.innerHTML = '';
+                const platformCards = container.querySelectorAll('.platform-card');
+                platformCards.forEach(card => card.remove()); // Clear only cards, not the no-results message
+
                 if (snapshot.exists()) {
                     snapshot.forEach(childSnapshot => {
                         const course = childSnapshot.val(); const courseId = childSnapshot.key;
@@ -1894,24 +1923,22 @@
                                         ${buttonHTML}
                                     </div>
                                 </div>`;
-                                container.innerHTML += cardHTML;
+                                container.insertAdjacentHTML('beforeend', cardHTML);
                             }
                         });
                     });
-                } else { container.innerHTML = '<p>لا توجد منصات تعليمية متاحة لمرحلتك الدراسية حالياً.</p>'; }
+                } else { container.insertAdjacentHTML('afterbegin', '<p>لا توجد منصات تعليمية متاحة لمرحلتك الدراسية حالياً.</p>'); }
             });
         }
-        function showCourseDetailsPage(courseId, isEnrolled) {
+       function showCourseDetailsPage(courseId, isEnrolled) {
             coursesRef.child(courseId).once('value', snapshot => {
                 const course = snapshot.val(); if (!course) return;
                 
-                // Populate Page Content
                 document.getElementById('details-page-course-title').textContent = course.title;
                 document.getElementById('details-page-course-description').textContent = course.description;
                 document.getElementById('details-price-monthly').textContent = `${course.priceMonthly} ج.م`;
                 document.getElementById('details-price-term').textContent = `${course.priceTerm} ج.م`;
                 
-                // Populate Slider
                 const sliderContainer = document.getElementById('details-page-slider-container'); 
                 sliderContainer.innerHTML = ''; 
                 clearInterval(detailsPageSlideInterval);
@@ -1921,14 +1948,15 @@
                         let currentIndex = 0; 
                         detailsPageSlideInterval = setInterval(() => { 
                             const slides = sliderContainer.querySelectorAll('.slide'); 
-                            slides[currentIndex].classList.remove('active'); 
-                            currentIndex = (currentIndex + 1) % slides.length; 
-                            slides[currentIndex].classList.add('active'); 
+                            if(slides.length > 1) {
+                                slides[currentIndex].classList.remove('active'); 
+                                currentIndex = (currentIndex + 1) % slides.length; 
+                                slides[currentIndex].classList.add('active'); 
+                            }
                         }, 3000); 
                     }
                 }
 
-                // Setup Enroll/View Button
                 const btnContainer = document.getElementById('details-page-enroll-btn-container');
                 if(isEnrolled){
                     btnContainer.innerHTML = `<button class="glossy-button enrolled-btn" onclick="viewStudentCourse('${courseId}')">أنت مشترك - فتح الكورس</button>`;
