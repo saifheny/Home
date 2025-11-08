@@ -420,8 +420,11 @@
             flex-direction: column; 
             gap: 15px; 
         }
+        #requests-container, #student-weeks-container {
+             margin-top: 30px;
+        }
         #course-students-container {
-            margin-top: 50px;
+            margin-top: 60px;
         }
         .course-card, .student-card, .request-card { 
             background-color: var(--surface-color); 
@@ -592,12 +595,17 @@
         .content-item:hover {
             background-color: rgba(142, 45, 226, 0.05);
         }
+        .content-item.exam-link {
+            cursor: pointer;
+        }
         .content-item:last-child { 
             border-bottom: none; 
         }
         .content-item-info { 
             flex-grow: 1; 
-            cursor: pointer; 
+        }
+         .content-item-info[onclick] {
+            cursor: pointer;
         }
         .content-item-info p { 
             margin: 0; 
@@ -606,6 +614,13 @@
         .content-item-info span { 
             font-size: 0.9rem; 
             color: var(--secondary-text-color); 
+        }
+        .exam-location-note {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            margin-top: 8px;
+            font-weight: 600;
         }
         .content-item .actions button { 
             background: none; 
@@ -616,9 +631,6 @@
             color: var(--dark-text); 
             border-radius: 8px;
             transition: all 0.3s;
-        }
-        .content-item .actions .action-btn {
-             font-size: 1.5rem; color: var(--accent-color);
         }
         .content-item .actions button:hover {
             background-color: rgba(142, 45, 226, 0.1);
@@ -1333,7 +1345,7 @@
     </div>
     <div id="teacher-requests-page" class="page">
         <header class="content-header"> <i class="fas fa-arrow-left back-icon" onclick="showPage('teacher-dashboard-page')"></i> <h1 id="requests-course-title"></h1><div style="width: 35px;"></div></header>
-        <div id="requests-container" style="width: 90%; max-width: 600px; margin-top: 20px;"></div>
+        <div id="requests-container" style="width: 90%; max-width: 600px;"></div>
         <div id="request-details-view" style="width: 90%; max-width: 600px;">
              <h4>تفاصيل الطلب</h4>
              <p><strong>الطالب:</strong> <span id="request-student-name"></span></p>
@@ -1416,6 +1428,7 @@
         let currentEnrollmentRequest = {};
         let detailsPageSlideInterval;
         let confirmCallback = null;
+        let examsFeatureLink = '#'; // Placeholder for the exams link
         const stageMap = { prep_1: 'أولى إعدادي', prep_2: 'ثانية إعدادي', prep_3: 'ثالثة إعدادي', sec_1: 'أولى ثانوي', sec_2_sci: 'ثانية ثانوي - علمي', sec_2_lit: 'ثانية ثانوي - أدبي', sec_3_sci_science: 'ثالثة ثانوي - علمي علوم', sec_3_sci_math: 'ثالثة ثانوي - علمي رياضة', sec_3_lit: 'ثالثة ثانوي - أدبي' };
 
         // --- Firebase Config ---
@@ -1558,17 +1571,18 @@
                          ['videos', 'homeworks', 'exams'].forEach(type => {
                             if (weekData[type]) {
                                 Object.entries(weekData[type]).forEach(([itemId, item]) => {
-                                    let icon = 'fa-question-circle', itemDetails = '', actionsHTML = '';
+                                    let icon = '', itemDetails = '', itemHTML = '';
                                     if(type === 'videos') {
                                         icon = 'fa-video'; 
                                         itemDetails = item.duration;
-                                        contentHTML += `<div class="content-item"><div class="content-item-info" onclick="openContentItem('${type}', '${item.url || ''}', '${item.title}')"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span></div></div>`;
+                                        itemHTML = `<div class="content-item"><div class="content-item-info" onclick="openContentItem('${type}', '${item.url || ''}', '${item.title}')"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span></div></div>`;
                                     } else {
                                         icon = (type === 'homeworks') ? 'fa-pencil-alt' : 'fa-file-alt';
                                         itemDetails = ` ${item.questions} سؤال - ${item.time} دقيقة`;
-                                        actionsHTML = `<div class="actions"><button class="action-btn" onclick="customAlert('هذه الخاصية قيد التطوير وستكون متاحة قريباً!')" title="بدء الاختبار/الواجب"><i class="fas fa-play-circle"></i></button></div>`;
-                                        contentHTML += `<div class="content-item"><div class="content-item-info"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span></div>${actionsHTML}</div>`;
+                                        const itemType = type === 'homeworks' ? 'الواجب' : 'الامتحان';
+                                        itemHTML = `<div class="content-item exam-link" onclick="window.location.href='${examsFeatureLink}'"><div class="content-item-info"><p><i class="fas ${icon}"></i> ${item.title}</p><span>${itemDetails}</span><span class="exam-location-note">${itemType} متوفر في قسم الاختبارات. اضغط للذهاب.</span></div></div>`;
                                     }
+                                    contentHTML += itemHTML;
                                 });
                             }
                          });
@@ -1606,7 +1620,7 @@
                 document.getElementById('video-title-header').textContent = title;
                 document.getElementById('video-player-container').innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
                 showPage('video-player-page');
-            } else { customAlert('هذه الخاصية (الواجبات/الامتحانات) قيد التطوير وستكون متاحة قريباً!'); }
+            }
         }
         document.getElementById('back-from-video').addEventListener('click', () => viewStudentCourse(currentStudentViewingCourse));
 
@@ -1874,7 +1888,7 @@
                 <div class="separator"></div>
                 <div class="feature-item" data-key="xo_game"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-gamepad"></i></div><p>لعبة XO</p></a></div>
                 <div class="feature-item" data-key="cola_game"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-puzzle-piece"></i></div><p>لعبة حبال الكولا</p></a></div>
-                <div class="feature-item" data-key="exams_homework"><a class="feature-item-link" onclick="showCoursesHub()"><div class="icon-bg"><i class="fa-solid fa-file-pen"></i></div><p>الاختبارات</p></a></div>
+                <div class="feature-item" data-key="exams_homework"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-file-pen"></i></div><p>الاختبارات</p></a></div>
                 <div class="separator"></div>
                 <div class="feature-item" data-key="chat"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-comments"></i></div><p>الدردشة</p></a></div>
                 <div class="feature-item" data-key="kerio"><a class="feature-item-link"><div class="icon-bg"><i class="fa-solid fa-laptop-file"></i></div><p>حل منصة كيريو</p></a></div>
@@ -1883,9 +1897,21 @@
             const categoriesRef = database.ref('categories');
             categoriesRef.on('value', (snapshot) => {
                 const links = snapshot.val(); if (!links) return;
+                
+                if(links['exams_homework']) {
+                    examsFeatureLink = links['exams_homework'];
+                }
+
                 featuresContainer.querySelectorAll('.feature-item-link').forEach(link => {
                     const key = link.parentElement.dataset.key;
-                    if(links[key] && !['my_courses', 'exams_homework'].includes(key)) link.href = links[key];
+                    if(links[key]){
+                         if (key === 'exams_homework') {
+                            link.href = 'javascript:void(0)';
+                            link.onclick = () => { window.location.href = examsFeatureLink; };
+                        } else if (key !== 'my_courses') {
+                            link.href = links[key];
+                        }
+                    }
                 });
             });
         }
